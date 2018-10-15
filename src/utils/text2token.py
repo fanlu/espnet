@@ -36,6 +36,7 @@ def main():
     args = parser.parse_args()
 
     rs = []
+    #import pdb;pdb.set_trace()
     if args.non_lang_syms is not None:
         with open(args.non_lang_syms, 'r') as f:
             nls = [unicode(x.rstrip(), 'utf_8') for x in f.readlines()]

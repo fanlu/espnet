@@ -11,8 +11,8 @@ endif
 
 .PHONY: all clean
 
-miniconda.sh:
-	test -f miniconda.sh || wget $(CONDA_URL) -O miniconda.sh
+#miniconda.sh:
+#	test -f miniconda.sh || wget $(CONDA_URL) -O miniconda.sh
 
 conda: miniconda.sh
 	test -d $(PWD)/venv || bash miniconda.sh -b -p $(PWD)/venv

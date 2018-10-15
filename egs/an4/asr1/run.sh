@@ -177,8 +177,9 @@ mkdir -p ${expdir}
 
 if [ ${stage} -le 3 ]; then
     echo "stage 3: Network Training"
-    ${cuda_cmd} --gpu ${ngpu} ${expdir}/train.log \
-        asr_train.py \
+    echo "`which python`"
+    #sgeoptg="-q g.q -l gpu=1 -l h_vmem=80G -l mem_free=40G"
+    ${cuda_cmd} --gpu ${ngpu} ${expdir}/train.log bash /mnt/cephfs2/asr/users/fanlu/espnet/tools/run_mgpu.sh ${ngpu} asr_train.py \
         --ngpu ${ngpu} \
         --backend ${backend} \
         --outdir ${expdir}/results \

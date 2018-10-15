@@ -3,7 +3,7 @@
 docker_gpu=0
 docker_egs=
 docker_folders=
-docker_cuda=9.1
+docker_cuda=9.0
 docker_user=true
 docker_env=
 
@@ -92,13 +92,15 @@ if [ "${docker_gpu}" == "-1" ]; then
   container_name="espnet_cpu_${this_time}"
 else
   # --rm erase the container when the training is finished.
-  cmd0="NV_GPU='${docker_gpu}' nvidia-docker"
+  #cmd0="NV_GPU='${docker_gpu}' docker run -it -P --volume=/var/lib/nvidia-docker/volumes/nvidia_driver/384:/usr/local/nvidia --volume=/var/lib/nvidia-docker/volumes/nvidia_driver/384/bin:/usr/local/nvidia/bin --volume=/var/lib/nvidia-docker/volumes/nvidia_driver/384/lib:/usr/lib/nvidia/ --device=/dev/nvidia0 --device=/dev/nvidia1 --device=/dev/nvidia2 --device=/dev/nvidia3 --device=/dev/nvidia-uvm-tools --device=/dev/nvidiactl --device=/dev/nvidia-uvm -v `pwd`/data:/workspace/data -v /opt/cephfs1/:/opt/cephfs1/ -v /mnt/cephfs2/:/mnt/cephfs2/"
+  #cmd0="NV_GPU='${docker_gpu}' nvidia-docker"
+  cmd0="NV_GPU='${docker_gpu}' docker"
   container_name="espnet_gpu${docker_gpu//,/_}_${this_time}"
 fi
 
 cd ..
 
-vols="-v ${PWD}/egs:/espnet/egs -v ${PWD}/src:/espnet/src -v ${PWD}/test:/espnet/test"
+vols="--volume=/var/lib/nvidia-docker/volumes/nvidia_driver/384:/usr/local/nvidia --volume=/var/lib/nvidia-docker/volumes/nvidia_driver/384/bin:/usr/local/nvidia/bin --volume=/var/lib/nvidia-docker/volumes/nvidia_driver/384/lib:/usr/lib/nvidia/ --device=/dev/nvidia0 --device=/dev/nvidia1 --device=/dev/nvidia2 --device=/dev/nvidia3 --device=/dev/nvidia-uvm-tools --device=/dev/nvidiactl --device=/dev/nvidia-uvm -v `pwd`/data:/workspace/data -v /opt/cephfs1/:/opt/cephfs1/ -v ${PWD}/egs:/espnet/egs -v ${PWD}/src:/espnet/src -v ${PWD}/test:/espnet/test"
 if [ ! -z "${docker_folders}" ]; then
   docker_folders=$(echo ${docker_folders} | tr "," "\n")
   for i in ${docker_folders[@]}
@@ -140,7 +142,7 @@ if [ ! -z "${http_proxy}" ]; then
   this_env="${this_env} -e 'http_proxy=${http_proxy}'"
 fi
 
-cmd="${cmd0} run -i --rm ${this_env} --name ${container_name} ${vols} espnet/espnet:${container_tag} /bin/bash -c '${cmd}'"
+cmd="${cmd0} run -it --rm ${this_env} --name ${container_name} ${vols} espnet/espnet:${container_tag} /bin/bash -c '${cmd}'"
 
 trap ctrl_c INT
 
