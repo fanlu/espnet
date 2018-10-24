@@ -88,6 +88,13 @@ class LSTMNet(nn.Module):
     return output
 
 
+class TDNNLSTM(nn.Module):
+  def __init__(self):
+    pass
+
+  def forward(self, input):
+    pass
+
 if __name__ == "__main__":
   # import os
   # print(os.environ)
@@ -100,11 +107,13 @@ if __name__ == "__main__":
   # print('output shape: ', output.shape)
   # print('hn shape: ', hn.shape)
   # print('cn shape: ', cn.shape)
-  items = "512_5_1.512_3_1.512_3_1"
+  tdnndef1 = "512_5_1.512_3_1.512_3_1"
+  dropout = 0.5
+
   # T B D
   input1 = torch.randn(200, 5, 3)
   # D, def, dropout
-  tdnn1 = TDNNStack(3, items, 0.5)
+  tdnn1 = TDNNStack(3, tdnndef1, dropout)
   # model_list = OrderedDict()
   # input_dim = 3
   # for ly, item in enumerate(items.split(".")):
@@ -116,3 +125,22 @@ if __name__ == "__main__":
   # model = nn.Sequential(model_list)
   output1 = tdnn1(input1)
   print(output1.shape)
+  output_dim = tdnn1.output_dim
+  hidden_lstm_dim = 256
+
+  rnn = nn.LSTM(output_dim, hidden_lstm_dim, 1,
+                       dropout=dropout, bidirectional=False)
+  output2, hc = rnn(output1)
+  print(output2.shape)
+
+  tdnndef2 = "512_3_3.512_3_3"
+  tdnn2 = TDNNStack(hidden_lstm_dim, tdnndef2, dropout)
+  output3 = tdnn2(output2)
+  output_dim_tdnn2 = tdnn2.output_dim
+  print(output3.shape)
+
+  rnn2 = nn.LSTM(output_dim_tdnn2, hidden_lstm_dim, 1,
+                       dropout=dropout, bidirectional=False)
+  output4, hc2 = rnn2(output3)
+  print(output4.shape)
+  
