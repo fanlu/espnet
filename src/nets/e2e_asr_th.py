@@ -435,8 +435,10 @@ class CTC(torch.nn.Module):
         ys_true = torch.cat(ys).cpu().int()  # batch x olen
 
         # get length info
-        logging.info(self.__class__.__name__ + ' input lengths:  ' + ''.join(str(hlens).split('\n')))
-        logging.info(self.__class__.__name__ + ' output lengths: ' + ''.join(str(olens).split('\n')))
+        logging.info(self.__class__.__name__ + ' input lengths:  ' +
+                     ''.join(str(hlens).split('\n')))
+        logging.info(self.__class__.__name__ + ' output lengths: ' +
+                     ''.join(str(olens).split('\n')))
 
         # get ctc loss
         # expected shape of seqLength x batchSize x alphabet_size
@@ -1038,7 +1040,8 @@ class AttLocRec(torch.nn.Module):
 
         # dot with gvec
         # utt x frame x att_dim -> utt x frame
-        e = self.gvec(torch.tanh(att_h.unsqueeze(1) + self.pre_compute_enc_h + dec_z_tiled)).squeeze(2)
+        e = self.gvec(torch.tanh(att_h.unsqueeze(
+            1) + self.pre_compute_enc_h + dec_z_tiled)).squeeze(2)
 
         # NOTE consider zero padding when compute w.
         if self.mask is None:
@@ -1903,7 +1906,8 @@ class Decoder(torch.nn.Module):
         batch = ys_out_pad.size(0)
         olength = ys_out_pad.size(1)
         logging.info(self.__class__.__name__ + ' input lengths:  ' + str(hlens))
-        logging.info(self.__class__.__name__ + ' output lengths: ' + str([y.size(0) for y in ys_out]))
+        logging.info(self.__class__.__name__ + ' output lengths: ' +
+                     str([y.size(0) for y in ys_out]))
 
         # initialization
         c_list = [self.zero_state(hs_pad)]
@@ -1966,7 +1970,8 @@ class Decoder(torch.nn.Module):
         if self.labeldist is not None:
             if self.vlabeldist is None:
                 self.vlabeldist = to_cuda(self, torch.from_numpy(self.labeldist))
-            loss_reg = - torch.sum((F.log_softmax(y_all, dim=1) * self.vlabeldist).view(-1), dim=0) / len(ys_in)
+            loss_reg = - torch.sum((F.log_softmax(y_all, dim=1) *
+                                   self.vlabeldist).view(-1), dim=0) / len(ys_in)
             self.loss = (1. - self.lsm_weight) * self.loss + self.lsm_weight * loss_reg
 
         return self.loss, acc
@@ -2037,7 +2042,8 @@ class Decoder(torch.nn.Module):
                 vy[0] = hyp['yseq'][i]
                 ey = self.embed(vy)           # utt list (1) x zdim
                 ey.unsqueeze(0)
-                att_c, att_w = self.att(h.unsqueeze(0), [h.size(0)], hyp['z_prev'][0], hyp['a_prev'])
+                att_c, att_w = self.att(h.unsqueeze(
+                    0), [h.size(0)], hyp['z_prev'][0], hyp['a_prev'])
                 ey = torch.cat((ey, att_c), dim=1)   # utt(1) x (zdim + hdim)
                 z_list[0], c_list[0] = self.decoder[0](ey, (hyp['z_prev'][0], hyp['c_prev'][0]))
                 for l in six.moves.range(1, self.dlayers):
@@ -2139,14 +2145,16 @@ class Decoder(torch.nn.Module):
 
         # check number of hypotheis
         if len(nbest_hyps) == 0:
-            logging.warn('there is no N-best results, perform recognition again with smaller minlenratio.')
+            logging.warn(
+                'there is no N-best results, perform recognition again with smaller minlenratio.')
             # should copy becasuse Namespace will be overwritten globally
             recog_args = Namespace(**vars(recog_args))
             recog_args.minlenratio = max(0.0, recog_args.minlenratio - 0.1)
             return self.recognize_beam(h, lpz, recog_args, char_list, rnnlm)
 
         logging.info('total log probability: ' + str(nbest_hyps[0]['score']))
-        logging.info('normalized log probability: ' + str(nbest_hyps[0]['score'] / len(nbest_hyps[0]['yseq'])))
+        logging.info('normalized log probability: ' +
+                     str(nbest_hyps[0]['score'] / len(nbest_hyps[0]['yseq'])))
 
         # remove sos
         return nbest_hyps
@@ -2265,6 +2273,9 @@ class Encoder(torch.nn.Module):
             self.enc2 = BLSTM(get_vgg2l_odim(idim, in_channel=in_channel),
                               elayers, eunits, eprojs, dropout)
             logging.info('Use CNN-VGG + BLSTM for encoder')
+        elif etype == "tdnn_lstm_1j":
+            from tdnn_lstm import TDNNLSTM
+            self.enc1 = TDNNLSTM(idim, dropout)
         else:
             logging.error(
                 "Error: need to specify an appropriate encoder archtecture")
@@ -2290,6 +2301,8 @@ class Encoder(torch.nn.Module):
         elif self.etype == 'vggblstm':
             xs_pad, ilens = self.enc1(xs_pad, ilens)
             xs_pad, ilens = self.enc2(xs_pad, ilens)
+        elif self.etype == 'tdnn_lstm_1j':
+            xs_pad, ilens = self.enc1(xs_pad, ilens)
         else:
             logging.error(
                 "Error: need to specify an appropriate encoder archtecture")
@@ -2312,7 +2325,7 @@ class BLSTMP(torch.nn.Module):
     :param float dropout: dropout rate
     """
 
-    def __init__(self, idim, elayers, cdim, hdim, subsample, dropout):
+    def __init__(self, idim, elayers, cdim, hdim, subsample, dropout, bidirectional=True):
         super(BLSTMP, self).__init__()
         for i in six.moves.range(elayers):
             if i == 0:
@@ -2320,7 +2333,7 @@ class BLSTMP(torch.nn.Module):
             else:
                 inputdim = hdim
             setattr(self, "bilstm%d" % i, torch.nn.LSTM(inputdim, cdim, dropout=dropout,
-                                                        num_layers=1, bidirectional=True, batch_first=True))
+                                                        num_layers=1, bidirectional=bidirectional, batch_first=True))
             # bottleneck layer to merge
             setattr(self, "bt%d" % i, torch.nn.Linear(2 * cdim, hdim))
 
@@ -2367,11 +2380,13 @@ class BLSTM(torch.nn.Module):
     :param float dropout: dropout rate
     """
 
-    def __init__(self, idim, elayers, cdim, hdim, dropout):
+    def __init__(self, idim, elayers, cdim, hdim, dropout, bidirectional=True):
         super(BLSTM, self).__init__()
+        self.bidirectional = bidirectional
         self.nblstm = torch.nn.LSTM(idim, cdim, elayers, batch_first=True,
-                                    dropout=dropout, bidirectional=True)
-        self.l_last = torch.nn.Linear(cdim * 2, hdim)
+                                    dropout=dropout, bidirectional=bidirectional)
+        input_dim = cdim * 2 if self.bidirectional else cdim
+        self.l_last = torch.nn.Linear(input_dim, hdim)
 
     def forward(self, xs_pad, ilens):
         '''BLSTM forward
