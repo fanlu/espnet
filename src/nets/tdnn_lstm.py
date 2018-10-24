@@ -1,3 +1,4 @@
+import logging
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -49,11 +50,17 @@ class TDNNStack(nn.Module):
     self.output_dim = input_dim
 
   def forward(self, input):
-    # input: seqLength X batchSize X dim
-    # output: seqLength X batchSize X dim (similar to lstm)
-    input = input.contiguous().transpose(0, 1).transpose(1, 2)  # batchSize, dim, seqLength
+    # # input: seqLength X batchSize X dim
+    # # output: seqLength X batchSize X dim (similar to lstm)
+    # input = input.contiguous().transpose(0, 1).transpose(1, 2)  # batchSize, dim, seqLength
+    # output = self.model(input)
+    # output = output.contiguous().transpose(1, 2).transpose(0, 1)  # seqLength, batchSize, dim
+    # return output
+
+    # input: B * T * D
+    input = input.contiguous().transpose(1, 2) # B * D * T
     output = self.model(input)
-    output = output.contiguous().transpose(1, 2).transpose(0, 1)  # seqLength, batchSize, dim
+    output = output.contiguous().transpose(1, 2) # B * T * D
     return output
 
 
@@ -87,15 +94,51 @@ class LSTMNet(nn.Module):
       output = output.mean(0)
     return output
 
-
 class TDNNLSTM(nn.Module):
-  def __init__(self):
-    pass
+  def __init__(self, idim, dropout):
+    super(TDNNLSTM, self).__init__()
+    from tdnn_lstm import TDNNStack
+    tdnndef1 = "512_5_1.512_3_1.512_3_1"
+    
+    # D, def, dropout
+    self.tdnn1 = TDNNStack(idim, tdnndef1, dropout)
+    output_dim = self.tdnn1.output_dim
+    hidden_lstm_dim = 256
+    self.rnn = nn.LSTM(output_dim, hidden_lstm_dim, 1,
+                        dropout=dropout, bidirectional=False, batch_first=True)
+    tdnndef2 = "512_3_3.512_3_3"
+    self.tdnn2 = TDNNStack(hidden_lstm_dim, tdnndef2, dropout)
+    output_dim_tdnn2 = self.tdnn2.output_dim
+    self.rnn2 = nn.LSTM(output_dim_tdnn2, hidden_lstm_dim, 1,
+                        dropout=dropout, bidirectional=False, batch_first=True)
+    
 
-  def forward(self, input):
-    pass
+  def forward(self, xs_pad, ilens):
+    '''BLSTM forward
+
+    :param torch.Tensor xs_pad: batch of padded input sequences (B, Tmax, D)
+    :param torch.Tensor ilens: batch of lengths of input sequences (B)
+    :return: batch of hidden state sequences (B, Tmax, erojs)
+    :rtype: torch.Tensor
+    '''
+    logging.info(self.__class__.__name__ + ' input lengths: ' + str(ilens))
+    output1 = self.tdnn1(xs_pad)
+    print(output1.shape)
+    output2, hc = self.rnn(output1)
+    print(output2.shape)
+    output3 = self.tdnn2(output2)
+    print(output3.shape)
+    output4, hc2 = self.rnn2(output3)
+    print(output4.shape)
+    return output4
 
 if __name__ == "__main__":
+  # from e2e_asr_th import TDNNLSTM
+  # B T D
+  input1 = torch.randn(5, 200, 3)
+  tl = TDNNLSTM(3, 0.5)
+  o2 = tl(input1, 2)
+  print(o2.shape)
   # import os
   # print(os.environ)
   # bilstm = nn.LSTM(input_size=10, hidden_size=20, num_layers=2, bidirectional=True)
