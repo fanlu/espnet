@@ -2275,7 +2275,7 @@ class Encoder(torch.nn.Module):
             logging.info('Use CNN-VGG + BLSTM for encoder')
         elif etype == "tdnn_lstm_1j":
             from tdnn_lstm import TDNNLSTM
-            self.enc1 = TDNNLSTM(idim, dropout)
+            self.enc1 = TDNNLSTM(idim, eunits, eprojs, subsample, dropout)
         else:
             logging.error(
                 "Error: need to specify an appropriate encoder archtecture")
@@ -2335,7 +2335,7 @@ class BLSTMP(torch.nn.Module):
             setattr(self, "bilstm%d" % i, torch.nn.LSTM(inputdim, cdim, dropout=dropout,
                                                         num_layers=1, bidirectional=bidirectional, batch_first=True))
             # bottleneck layer to merge
-            setattr(self, "bt%d" % i, torch.nn.Linear(2 * cdim, hdim))
+            setattr(self, "bt%d" % i, torch.nn.Linear(2 * cdim if bidirectional else cdim, hdim))
 
         self.elayers = elayers
         self.cdim = cdim
