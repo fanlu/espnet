@@ -6,6 +6,8 @@
 . ./path.sh
 . ./cmd.sh
 n_iter_processes=24
+queue=other.q
+host=GPU_172_28_230_53
 # general configuration
 backend=pytorch
 stage=0        # start from 0 if you need to start from data preparation
@@ -93,6 +95,7 @@ set -o pipefail
 train_set=train
 train_dev=dev
 recog_set="test"
+#recog_set="dev test"
 echo $stage
 data=/mnt/cephfs2/asr/database/AM/aishell/
 data=/opt/cephfs1/asr/users/fanlu/mfs/aishell/
@@ -252,7 +255,7 @@ mkdir -p ${expdir}
 
 if [ ${stage} -le 4 ]; then
     echo "stage 4: Network Training"
-    ${cuda_cmd} --gpu ${ngpu} ${expdir}/train.log bash /mnt/cephfs2/asr/users/fanlu/espnet/tools/run_mgpu.sh ${ngpu} asr_train.py \
+    ${cuda_cmd} --gpu ${ngpu} -q ${queue} -l h="${host}" ${expdir}/train.log bash /mnt/cephfs2/asr/users/fanlu/espnet/tools/run_mgpu.sh ${ngpu} asr_train.py \
         --ngpu ${ngpu} \
         --backend ${backend} \
         --outdir ${expdir}/results \
@@ -295,17 +298,17 @@ if [ ${stage} -le 5 ]; then
         feat_recog_dir=${dumpdir}/${rtask}/delta${do_delta}
 
         # split data
-        splitjson.py --parts ${nj} ${feat_recog_dir}/data.json
+        #splitjson.py --parts ${nj} ${feat_recog_dir}/data.json
 
         #### use CPU for decoding
-        ngpu=0
+        #ngpu=1
 
-        ${decode_cmd} JOB=1:${nj} ${expdir}/${decode_dir}/log/decode.JOB.log \
-            asr_recog.py \
+        # ${decode_cmd} JOB=1:${nj} ${expdir}/${decode_dir}/log/decode.JOB.log --recog-json ${feat_recog_dir}/split${nj}utt/data.JOB.json --result-label ${expdir}/${decode_dir}/data.JOB.json 
+        ${decode_cmd} --gpu ${ngpu} ${expdir}/${decode_dir}/log/decode.log bash /mnt/cephfs2/asr/users/fanlu/espnet/tools/run_mgpu.sh ${ngpu} asr_recog.py \
             --ngpu ${ngpu} \
             --backend ${backend} \
-            --recog-json ${feat_recog_dir}/split${nj}utt/data.JOB.json \
-            --result-label ${expdir}/${decode_dir}/data.JOB.json \
+            --recog-json ${feat_recog_dir}/data.json \
+            --result-label ${expdir}/${decode_dir}/data.json \
             --model ${expdir}/results/${recog_model}  \
             --beam-size ${beam_size} \
             --penalty ${penalty} \
