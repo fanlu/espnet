@@ -2,6 +2,10 @@
 *.pyc
 \#*\#
 .\#*
+*swp
+*swo
+*.txt
+.vscode*
 *DS_Store
 slurm-*.out
 
