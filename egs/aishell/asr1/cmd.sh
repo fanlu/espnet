@@ -11,9 +11,11 @@
 # or search for the string 'default_config' in utils/queue.pl or utils/slurm.pl.
 
 export train_cmd="run.pl --mem 2G"
-export cuda_cmd="queue.pl --mem 4G --gpu 1"
+#export cuda_cmd="queue.pl --mem 4G --gpu 4 -q other.q -l h=\"GPU_172_28_230_53\""
+export cuda_cmd="queue.pl --mem 4G --gpu 4"
 #export cuda_cmd="run.pl --mem 2G --gpu 1"
-export decode_cmd="run.pl --mem 4G"
+#export decode_cmd="run.pl --mem 4G"
+export decode_cmd="queue.pl --mem 4G --gpu 1 -l h=\"GPU_172_28_230_60\""
 
 # JHU setup
 #export train_cmd="queue.pl --mem 2G"

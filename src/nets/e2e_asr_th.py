@@ -2022,6 +2022,7 @@ class Decoder(torch.nn.Module):
         else:
             hyp = {'score': 0.0, 'yseq': [y], 'c_prev': c_list, 'z_prev': z_list, 'a_prev': a}
         if lpz is not None:
+            #ctc_prefix_score = CTCPrefixScore(lpz.detach().cpu().numpy(), 0, self.eos, np)
             ctc_prefix_score = CTCPrefixScore(lpz.detach().numpy(), 0, self.eos, np)
             hyp['ctc_state_prev'] = ctc_prefix_score.initial_state()
             hyp['ctc_score_prev'] = 0.0
@@ -2057,7 +2058,7 @@ class Decoder(torch.nn.Module):
                     local_scores = local_att_scores + recog_args.lm_weight * local_lm_scores
                 else:
                     local_scores = local_att_scores
-
+                #import pdb;pdb.set_trace()
                 if lpz is not None:
                     local_best_scores, local_best_ids = torch.topk(
                         local_att_scores, ctc_beam, dim=1)
@@ -2386,6 +2387,7 @@ class BLSTM(torch.nn.Module):
         self.nblstm = torch.nn.LSTM(idim, cdim, elayers, batch_first=True,
                                     dropout=dropout, bidirectional=bidirectional)
         input_dim = cdim * 2 if self.bidirectional else cdim
+        print(cdim, input_dim)
         self.l_last = torch.nn.Linear(input_dim, hdim)
 
     def forward(self, xs_pad, ilens):
@@ -2462,3 +2464,12 @@ class VGG2L(torch.nn.Module):
         xs_pad = [xs_pad[i, :ilens[i]] for i in range(len(ilens))]
         xs_pad = pad_list(xs_pad, 0.0)
         return xs_pad, ilens
+
+
+if __name__ == "__main__":
+    xs_pad = torch.randn(2, 100, 83)
+    ilens = torch.ones((2,), dtype=torch.int8)
+    enc1 = BLSTM(83, 5, 1024, 512, 0, bidirectional=False)
+    import pdb;pdb.set_trace()
+    xs_pad, ilens = enc1(xs_pad, ilens)
+    print(xs_pad.shape, ilens.shape)
