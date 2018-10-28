@@ -281,7 +281,7 @@ class E2E(torch.nn.Module):
                     n = data.size(1)
                     stdv = 1. / math.sqrt(n)
                     data.normal_(0, stdv)
-                elif data.dim() == 4:
+                elif data.dim() >= 3:
                     # conv weight
                     n = data.size(1)
                     for k in data.size()[2:]:

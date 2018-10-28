@@ -11,7 +11,7 @@ host=GPU_172_28_230_53
 # general configuration
 backend=pytorch
 stage=0        # start from 0 if you need to start from data preparation
-ngpu=1         # number of gpus ("0" uses cpu, otherwise use gpu)
+ngpu=4         # number of gpus ("0" uses cpu, otherwise use gpu)
 debugmode=1
 dumpdir=dump   # directory to dump full features
 N=0            # number of minibatches to be used (mainly for debugging). "0" uses all minibatches.
@@ -99,6 +99,7 @@ recog_set="test"
 echo $stage
 data=/mnt/cephfs2/asr/database/AM/aishell/
 data=/opt/cephfs1/asr/users/fanlu/mfs/aishell/
+data=/mnt/cephfs2/asr/users/fanlu/data
 if [ ${stage} -le 0 ]; then
     # Lexicon Preparation,
     local/aishell_prepare_dict.sh $data/resource_aishell || exit 1;
