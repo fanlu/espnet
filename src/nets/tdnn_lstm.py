@@ -140,13 +140,13 @@ class TDNNLSTM(nn.Module):
     '''
     logging.info(self.__class__.__name__ + ' input lengths: ' + str(ilens))
     xs_pad, ilens = self.tdnn1(xs_pad, ilens)
-    print(xs_pad.shape)
+    #print(xs_pad.shape)
     xs_pad, ilens = self.blstmp1(xs_pad, ilens)
-    print(xs_pad.shape)
+    #print(xs_pad.shape)
     xs_pad, ilens = self.tdnn2(xs_pad, ilens)
-    print(xs_pad.shape)
+    #print(xs_pad.shape)
     xs_pad, ilens = self.blstmp2(xs_pad, ilens)
-    print(xs_pad.shape)
+    #print(xs_pad.shape)
     return xs_pad, ilens
 
 
