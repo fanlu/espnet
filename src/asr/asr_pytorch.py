@@ -212,6 +212,9 @@ def train(args):
     e2e = E2E(idim, odim, args)
     model = Loss(e2e, args.mtlalpha)
 
+    print(model)
+    import sys
+    sys.stdout.flush()
     # write model config
     if not os.path.exists(args.outdir):
         os.makedirs(args.outdir)
@@ -381,9 +384,11 @@ def recog(args):
         #    args.batch_size, args.batch_size * args.ngpu))
         #args.batch_size *= args.ngpu
 
+    print(model)
+    import sys
+    sys.stdout.flush()
     device = torch.device("cuda" if args.ngpu > 0 else "cpu")
     model = model.to(device)
-
     torch_load(args.model, model)
 
     # read rnnlm
