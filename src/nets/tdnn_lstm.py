@@ -46,9 +46,10 @@ class TDNNStack(nn.Module):
         model_list["SeLU%d" % ly] = nn.SELU()
       else:
         model_list["ReLU%d" % ly] = nn.ReLU()
-        model_list["batch_norm%d" % ly] = nn.BatchNorm1d(out_dim)
+        #model_list["batch_norm%d" % ly] = nn.BatchNorm1d(out_dim)
       if use_SE:
         model_list["SEnet%d" % ly] = SquExiNet(out_dim, SE_ratio)
+      print("drop is %s" % dropout)
       if dropout != 0.0:
         model_list['dropout%d' % ly] = nn.Dropout(dropout)
       input_dim = out_dim
@@ -130,6 +131,10 @@ class TDNNLSTM(nn.Module):
     # self.rnn2 = nn.LSTM(output_dim_tdnn2, hidden_lstm_dim, 1,
     #                     dropout=dropout, bidirectional=False, batch_first=True)
     self.blstmp2 = BLSTMP(output_dim_tdnn2, 1, lstm_dim, lstm_dim_proj, subsample, dropout, bidirectional=False)
+    tdnndef3 = "512_3_3.512_3_3"
+    self.tdnn3 = TDNNStack(lstm_dim_proj, tdnndef3, dropout)
+    output_dim_tdnn3 = self.tdnn3.output_dim
+    self.blstmp3 = BLSTMP(output_dim_tdnn3, 1, lstm_dim, lstm_dim_proj, subsample, dropout, bidirectional=False)
 
   def forward(self, xs_pad, ilens):
     '''
@@ -147,6 +152,8 @@ class TDNNLSTM(nn.Module):
     #print(xs_pad.shape)
     xs_pad, ilens = self.blstmp2(xs_pad, ilens)
     #print(xs_pad.shape)
+    xs_pad, ilens = self.tdnn3(xs_pad, ilens)
+    xs_pad, ilens = self.blstmp3(xs_pad, ilens)
     return xs_pad, ilens
 
 
