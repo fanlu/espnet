@@ -2303,6 +2303,10 @@ class Encoder(torch.nn.Module):
             xs_pad, ilens = self.enc1(xs_pad, ilens)
         elif self.etype == 'blstmp':
             xs_pad, ilens = self.enc1(xs_pad, ilens)
+        elif self.etype == 'lstm':
+            xs_pad, ilens = self.enc1(xs_pad, ilens)
+        elif self.etype == 'lstmp':
+            xs_pad, ilens = self.enc1(xs_pad, ilens)
         elif self.etype == 'vggblstmp':
             xs_pad, ilens = self.enc1(xs_pad, ilens)
             xs_pad, ilens = self.enc2(xs_pad, ilens)
