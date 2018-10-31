@@ -7,6 +7,7 @@
 . ./cmd.sh
 n_iter_processes=24
 queue=other.q
+eps=1e-4
 host=GPU_172_28_230_53
 # general configuration
 backend=pytorch
@@ -286,6 +287,7 @@ if [ ${stage} -le 4 ]; then
         --maxlen-out ${maxlen_out} \
         --sampling-probability ${samp_prob} \
         --opt ${opt} \
+        --eps ${eps} \
         --epochs ${epochs}
 fi
 
