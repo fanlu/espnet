@@ -2263,6 +2263,13 @@ class Encoder(torch.nn.Module):
             self.enc1 = BLSTMP(idim, elayers, eunits,
                                eprojs, subsample, dropout)
             logging.info('BLSTM with every-layer projection for encoder')
+        elif etype == 'lstm':
+            self.enc1 = BLSTM(idim, elayers, eunits, eprojs, dropout, False)
+            logging.info('LSTM without projection for encoder')
+        elif etype == 'lstmp':
+            self.enc1 = BLSTMP(idim, elayers, eunits,
+                               eprojs, subsample, dropout, False)
+            logging.info('LSTM with every-layer projection for encoder')
         elif etype == 'vggblstmp':
             self.enc1 = VGG2L(in_channel)
             self.enc2 = BLSTMP(get_vgg2l_odim(idim, in_channel=in_channel),
