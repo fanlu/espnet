@@ -7,7 +7,7 @@
 . ./cmd.sh
 n_iter_processes=24
 queue=other.q
-eps=1e-4
+eps=1e-8
 host=GPU_172_28_230_53
 # general configuration
 backend=pytorch
@@ -257,7 +257,7 @@ mkdir -p ${expdir}
 
 if [ ${stage} -le 4 ]; then
     echo "stage 4: Network Training"
-    ${cuda_cmd} --gpu ${ngpu} -q ${queue} -l h="${host}" ${expdir}/train.log bash /mnt/cephfs2/asr/users/fanlu/espnet/tools/run_mgpu.sh ${ngpu} asr_train.py \
+    ${cuda_cmd} --gpu ${ngpu} -q ${queue} ${expdir}/train.log bash /mnt/cephfs2/asr/users/fanlu/espnet/tools/run_mgpu.sh ${ngpu} asr_train.py \
         --ngpu ${ngpu} \
         --backend ${backend} \
         --outdir ${expdir}/results \
@@ -291,7 +291,7 @@ if [ ${stage} -le 4 ]; then
         --epochs ${epochs}
 fi
 
-if [ ${stage} -le 5 ]; then
+if [ ${stage} -le -1 ]; then
     echo "stage 5: Decoding"
     nj=32
 
