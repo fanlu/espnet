@@ -2284,6 +2284,9 @@ class Encoder(torch.nn.Module):
         elif etype == "tdnn_lstm_1j":
             from tdnn_lstm import TDNNLSTM
             self.enc1 = TDNNLSTM(idim, eunits, eprojs, subsample, dropout)
+        elif etype == "tdnn":
+            from tdnn_lstm import TDNNStack
+            self.enc1 = TDNNStack(idim, "512_5_1.512_3_1.512_3_1.512_3_3.1024_3_3", dropout)
         else:
             logging.error(
                 "Error: need to specify an appropriate encoder archtecture")
@@ -2314,6 +2317,8 @@ class Encoder(torch.nn.Module):
             xs_pad, ilens = self.enc1(xs_pad, ilens)
             xs_pad, ilens = self.enc2(xs_pad, ilens)
         elif self.etype == 'tdnn_lstm_1j':
+            xs_pad, ilens = self.enc1(xs_pad, ilens)
+        elif self.etype == 'tdnn':
             xs_pad, ilens = self.enc1(xs_pad, ilens)
         else:
             logging.error(
