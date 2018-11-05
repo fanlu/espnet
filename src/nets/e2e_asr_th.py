@@ -2276,10 +2276,21 @@ class Encoder(torch.nn.Module):
                                elayers, eunits, eprojs,
                                subsample, dropout)
             logging.info('Use CNN-VGG + BLSTMP for encoder')
+        elif etype == 'vgglstmp':
+            self.enc1 = VGG2L(in_channel)
+            self.enc2 = BLSTMP(get_vgg2l_odim(idim, in_channel=in_channel),
+                               elayers, eunits, eprojs,
+                               subsample, dropout, bidirectional=False)
+            logging.info('Use CNN-VGG + BLSTMP for encoder')
         elif etype == 'vggblstm':
             self.enc1 = VGG2L(in_channel)
             self.enc2 = BLSTM(get_vgg2l_odim(idim, in_channel=in_channel),
                               elayers, eunits, eprojs, dropout)
+            logging.info('Use CNN-VGG + BLSTM for encoder')
+        elif etype == 'vgglstm':
+            self.enc1 = VGG2L(in_channel)
+            self.enc2 = BLSTM(get_vgg2l_odim(idim, in_channel=in_channel),
+                              elayers, eunits, eprojs, dropout, bidirectional=False)
             logging.info('Use CNN-VGG + BLSTM for encoder')
         elif etype == "tdnn_lstm_1j":
             from tdnn_lstm import TDNNLSTM
@@ -2314,6 +2325,12 @@ class Encoder(torch.nn.Module):
             xs_pad, ilens = self.enc1(xs_pad, ilens)
             xs_pad, ilens = self.enc2(xs_pad, ilens)
         elif self.etype == 'vggblstm':
+            xs_pad, ilens = self.enc1(xs_pad, ilens)
+            xs_pad, ilens = self.enc2(xs_pad, ilens)
+        elif self.etype == 'vgglstmp':
+            xs_pad, ilens = self.enc1(xs_pad, ilens)
+            xs_pad, ilens = self.enc2(xs_pad, ilens)
+        elif self.etype == 'vgglstm':
             xs_pad, ilens = self.enc1(xs_pad, ilens)
             xs_pad, ilens = self.enc2(xs_pad, ilens)
         elif self.etype == 'tdnn_lstm_1j':

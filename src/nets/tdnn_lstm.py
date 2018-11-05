@@ -46,7 +46,7 @@ class TDNNStack(nn.Module):
         model_list["SeLU%d" % ly] = nn.SELU()
       else:
         model_list["ReLU%d" % ly] = nn.ReLU()
-        #model_list["batch_norm%d" % ly] = nn.BatchNorm1d(out_dim)
+        model_list["batch_norm%d" % ly] = nn.BatchNorm1d(out_dim)
       if use_SE:
         model_list["SEnet%d" % ly] = SquExiNet(out_dim, SE_ratio)
       print("drop is %s" % dropout)
@@ -115,14 +115,15 @@ class TDNNLSTM(nn.Module):
   def __init__(self, idim, lstm_dim, lstm_dim_proj, subsample, dropout):
     super(TDNNLSTM, self).__init__()
     from tdnn_lstm import TDNNStack
-    from e2e_asr_th import BLSTMP
+    from e2e_asr_th import BLSTMP, BLSTM
     tdnndef1 = "512_5_1.512_3_1.512_3_1"
 
     # D, def, dropout
     self.tdnn1 = TDNNStack(idim, tdnndef1, dropout)
     output_dim = self.tdnn1.output_dim
     # hidden_lstm_dim = 256
-    self.blstmp1 = BLSTMP(output_dim, 1, lstm_dim, lstm_dim_proj, subsample, dropout, bidirectional=False)
+    #self.blstmp1 = BLSTMP(output_dim, 1, lstm_dim, lstm_dim_proj, subsample, dropout, bidirectional=False)
+    self.lstm1 = BLSTM(output_dim, 1, lstm_dim, lstm_dim_proj, dropout)
     # self.rnn = nn.LSTM(output_dim, hidden_lstm_dim, 1,
     #                    dropout=dropout, bidirectional=False, batch_first=True)
     tdnndef2 = "512_3_3.512_3_3"
@@ -130,11 +131,13 @@ class TDNNLSTM(nn.Module):
     output_dim_tdnn2 = self.tdnn2.output_dim
     # self.rnn2 = nn.LSTM(output_dim_tdnn2, hidden_lstm_dim, 1,
     #                     dropout=dropout, bidirectional=False, batch_first=True)
-    self.blstmp2 = BLSTMP(output_dim_tdnn2, 1, lstm_dim, lstm_dim_proj, subsample, dropout, bidirectional=False)
+    #self.blstmp2 = BLSTMP(output_dim_tdnn2, 1, lstm_dim, lstm_dim_proj, subsample, dropout, bidirectional=False)
+    self.lstm2 = BLSTM(output_dim_tdnn2, 1, lstm_dim, lstm_dim_proj, dropout)
     tdnndef3 = "512_3_3.512_3_3"
     self.tdnn3 = TDNNStack(lstm_dim_proj, tdnndef3, dropout)
     output_dim_tdnn3 = self.tdnn3.output_dim
-    self.blstmp3 = BLSTMP(output_dim_tdnn3, 1, lstm_dim, lstm_dim_proj, subsample, dropout, bidirectional=False)
+    #self.blstmp3 = BLSTMP(output_dim_tdnn3, 1, lstm_dim, lstm_dim_proj, subsample, dropout, bidirectional=False)
+    self.lstm3 = BLSTM(output_dim_tdnn3, 1, lstm_dim, lstm_dim_proj, dropout)
 
   def forward(self, xs_pad, ilens):
     '''
@@ -146,14 +149,14 @@ class TDNNLSTM(nn.Module):
     logging.info(self.__class__.__name__ + ' input lengths: ' + str(ilens))
     xs_pad, ilens = self.tdnn1(xs_pad, ilens)
     #print(xs_pad.shape)
-    xs_pad, ilens = self.blstmp1(xs_pad, ilens)
+    xs_pad, ilens = self.lstm1(xs_pad, ilens)
     #print(xs_pad.shape)
     xs_pad, ilens = self.tdnn2(xs_pad, ilens)
     #print(xs_pad.shape)
-    xs_pad, ilens = self.blstmp2(xs_pad, ilens)
+    xs_pad, ilens = self.lstm2(xs_pad, ilens)
     #print(xs_pad.shape)
     xs_pad, ilens = self.tdnn3(xs_pad, ilens)
-    xs_pad, ilens = self.blstmp3(xs_pad, ilens)
+    xs_pad, ilens = self.lstm3(xs_pad, ilens)
     return xs_pad, ilens
 
 
