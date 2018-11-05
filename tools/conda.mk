@@ -25,3 +25,4 @@ virtualenv: conda requirements.txt
 	. venv/bin/activate && conda install -y numpy matplotlib
 	. venv/bin/activate && grep -v torch requirements.txt | pip install -r /dev/stdin
 	. venv/bin/activate && conda install pytorch -c pytorch
+

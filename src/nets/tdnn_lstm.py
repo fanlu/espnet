@@ -183,6 +183,7 @@ if __name__ == "__main__":
   xs_pad, ilens = tl(xs_pad, ilens)
   print(xs_pad.shape)
 
+
   lstm = nn.LSTM(10, 20, 3, bidirectional=True)
   print(lstm)
 
