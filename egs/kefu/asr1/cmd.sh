@@ -11,7 +11,7 @@
 # or search for the string 'default_config' in utils/queue.pl or utils/slurm.pl.
 
 #export train_cmd="queue.pl --mem 4G -l h='!GPU_172_18_184_38&!GPU_172_28_231_24'" # -q other_cpu.q"
-export train_cmd="queue.pl --mem 4G -l h='GPU_172_28_230_53' -q other_cpu.q"
+export train_cmd="queue.pl --mem 4G -l h='GPU_172_28_230_58' -q other_cpu.q"
 #export cuda_cmd="queue.pl --mem 4G --gpu 4 -q other.q -l h=\"GPU_172_28_230_56\""
 export cuda_cmd="queue.pl --mem 4G --gpu 4"
 #export cuda_cmd="run.pl --mem 2G --gpu 1"

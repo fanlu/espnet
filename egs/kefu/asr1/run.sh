@@ -78,7 +78,6 @@ hkust2=/export/corpora/LDC/LDC2005T32/
 # exp tag
 tag="" # tag for managing experiments.
 
-. utils/parse_options.sh || exit 1;
 
 . ./path.sh
 . ./cmd.sh
@@ -99,6 +98,7 @@ recog_set="kefu_eval_200h kefu_test3"
 echo $stage
 data=/mnt/cephfs2/asr/database/AM/aishell/
 data=/opt/cephfs1/asr/users/fanlu/mfs/aishell/
+. utils/parse_options.sh || exit 1;
 if [ ${stage} -le 0 ]; then
     # Lexicon Preparation,
     local/aishell_prepare_dict.sh $data/resource_aishell || exit 1;

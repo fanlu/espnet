@@ -96,7 +96,7 @@ train_set=train_nodev
 #train_dev=dev
 #recog_set="test_kefu"
 #recog_set="kefu_eval_200h "
-recog_set="kefu_test3"
+recog_set="test_kefu kefu_eval_200h kefu_test3"
 echo $stage
 data=/mnt/cephfs2/asr/database/AM/aishell/
 data=/opt/cephfs1/asr/users/fanlu/mfs/aishell/

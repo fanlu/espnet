@@ -30,13 +30,18 @@ matplotlib.use('Agg')
 
 
 # * -------------------- training iterator related -------------------- *
-def make_batchset(data, batch_size, max_length_in, max_length_out, num_batches=0):
+def make_batchset(data, batch_size, max_length_in, max_length_out, num_batches=0, min_batch_size=1):
     # sort it by input lengths (long to short)
     sorted_data = sorted(data.items(), key=lambda data: int(
         data[1]['input'][0]['shape'][0]), reverse=True)
     logging.info('# utts: ' + str(len(sorted_data)))
+    # check #utts is more than min_batch_size
+    if len(sorted_data) < min_batch_size:
+        raise ValueError("#utts is less than min_batch_size.")
     # change batchsize depending on the input and output length
-    minibatch = []
+    #minibatch = []
+    # make list of minibatches
+    minibatches = []
     start = 0
     while True:
         ilen = int(sorted_data[start][1]['input'][0]['shape'][0])
@@ -45,17 +50,32 @@ def make_batchset(data, batch_size, max_length_in, max_length_out, num_batches=0
         # if ilen = 1000 and max_length_in = 800
         # then b = batchsize / 2
         # and max(1, .) avoids batchsize = 0
-        b = max(1, int(batch_size / (1 + factor)))
-        end = min(len(sorted_data), start + b)
-        minibatch.append(sorted_data[start:end])
+        
+        #b = max(1, int(batch_size / (1 + factor)))
+        #end = min(len(sorted_data), start + b)
+        #minibatch.append(sorted_data[start:end])
+        
+        # and max(min_batches, .) avoids batchsize = 0
+        bs = max(min_batch_size, int(batch_size / (1 + factor)))
+        end = min(len(sorted_data), start + bs)
+        minibatch = sorted_data[start:end]
+        # check each batch is more than minimum batchsize
+        if len(minibatch) < min_batch_size:
+            mod = min_batch_size - len(minibatch) % min_batch_size
+            additional_minibatch = [sorted_data[i] for i in np.random.randint(0, start, mod)]
+            minibatch.extend(additional_minibatch)
+        minibatches.append(minibatch)
         if end == len(sorted_data):
             break
         start = end
+    #if num_batches > 0:
+    #    minibatch = minibatch[:num_batches]
+    #logging.info('# minibatches: ' + str(len(minibatch)))
     if num_batches > 0:
-        minibatch = minibatch[:num_batches]
-    logging.info('# minibatches: ' + str(len(minibatch)))
-
-    return minibatch
+        minibatches = minibatches[:num_batches]
+    logging.info('# minibatches: ' + str(len(minibatches)))
+    #return minibatch
+    return minibatches
 
 
 def load_inputs_and_targets(batch):
